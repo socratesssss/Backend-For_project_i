@@ -3,7 +3,9 @@ const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const bannerRoutes = require('./routers/BannerRouters')
+const bannerRoutes = require('./routers/BannerRouters');
+const DeleteImageRouter = require('./routers/deleteImageRouter');
+
 
 // Import routers
 const ProductRouter = require('./routers/productRouter');
@@ -32,6 +34,9 @@ app.use('/api/product', ProductRouter);
 app.use('/api/upload', UploadRouter); // ✅ NEW
 // banner
 app.use('/api/banners', bannerRoutes);
+// delete img
+app.use('/api/delete-image', DeleteImageRouter);
+
 
 
 app.get('/', (req, res) => {

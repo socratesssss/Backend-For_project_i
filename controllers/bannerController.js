@@ -41,8 +41,10 @@ const deleteBanner = async (req, res) => {
     const banner = await Banner.findById(id);
     if (!banner) return res.status(404).json({ error: 'Banner not found' });
 
-    // ✅ Ensure correct path to 'public/uploads'
-    const imagePath = path.join(__dirname, '..', 'public', banner.imageUrl);
+    // ✅ Extract filename from the imageUrl
+    const filename = path.basename(banner.imageUrl); // e.g., xyz.jpg
+
+    const imagePath = path.join(__dirname, '..', 'public', 'uploads', filename);
 
     try {
       await fs.unlink(imagePath); // remove image file
@@ -53,9 +55,11 @@ const deleteBanner = async (req, res) => {
     await banner.deleteOne();
     res.json({ message: 'Banner deleted' });
   } catch (error) {
+    console.error('Error deleting banner:', error);
     res.status(500).json({ error: 'Server error deleting banner' });
   }
 };
+
 
 module.exports = {
   getBanners,
