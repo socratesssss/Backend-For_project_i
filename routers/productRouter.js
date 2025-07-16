@@ -109,16 +109,81 @@ router.post('/', upload.fields(uploadFields), async (req, res) => {
   }
 });
 
-// GET all products
+
+
+// In your products route file
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
-    res.json(products);
+    const page = Math.max(1, parseInt(req.query.page)) || 1;
+    const limit = Math.max(1, parseInt(req.query.limit)) || 10;
+    const skip = (page - 1) * limit;
+
+    const minPrice = Number(req.query.minPrice) || 0;
+    const maxPrice = Number(req.query.maxPrice) || Infinity;
+    const sortOrder = req.query.sortOrder || '';
+    const categories = req.query.categories ? req.query.categories.split(',').filter(Boolean) : [];
+    const searchQuery = req.query.q || '';
+
+    // Build MongoDB filter
+    const filter = {
+      price: { $gte: minPrice, $lte: maxPrice }
+    };
+
+    if (categories.length > 0) {
+      filter.category = { $in: categories };
+    }
+
+    // Add text search if query exists
+    if (searchQuery.trim()) {
+      filter.$or = [
+        { name: { $regex: searchQuery, $options: 'i' } },
+        { miniDescription: { $regex: searchQuery, $options: 'i' } },
+        { description: { $regex: searchQuery, $options: 'i' } }
+      ];
+    }
+
+    // Build sort
+    let sort = {};
+    if (sortOrder === 'lowToHigh') {
+      sort = { discountPrice: 1, price: 1 };
+    } else if (sortOrder === 'highToLow') {
+      sort = { discountPrice: -1, price: -1 };
+    }
+
+    const total = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
+
+    const products = await Product.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      success: true,
+      products,
+      total,
+      totalPages,
+      page,
+      limit
+    });
+
   } catch (err) {
-    console.error('Failed to fetch products:', err);
-    res.status(500).send('Failed to fetch products');
+    console.error("❌ Error:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server Error', 
+      error: err.message 
+    });
   }
 });
+
+
+
+
+
+
+
+
 
 // GET by ID
 router.get('/:id', async (req, res) => {
