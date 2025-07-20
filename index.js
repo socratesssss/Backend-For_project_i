@@ -3,7 +3,6 @@ const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-
 // Routers
 const ProductRouter = require('./routers/productRouter');
 const UploadRouter = require('./routers/uploadRouters');
@@ -22,6 +21,10 @@ app.use('/api/upload', UploadRouter);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/delete-image', DeleteImageRouter);
 app.use("/api/order", orderRouter);
+
+// 
+
+
 
 // 
 app.get('/', (req, res) => {

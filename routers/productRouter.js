@@ -3,7 +3,7 @@ const multer = require('multer');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
-const { Product } = require('../models/productsModel');
+const Product  = require('../models/productsModel');
 
 const router = express.Router();
 
@@ -114,9 +114,10 @@ router.post('/', upload.fields(uploadFields), async (req, res) => {
 // In your products route file
 router.get('/', async (req, res) => {
   try {
-    const page = Math.max(1, parseInt(req.query.page)) || 1;
-    const limit = Math.max(1, parseInt(req.query.limit)) || 10;
-    const skip = (page - 1) * limit;
+ 
+      const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
 
     const minPrice = Number(req.query.minPrice) || 0;
     const maxPrice = Number(req.query.maxPrice) || Infinity;
@@ -143,7 +144,7 @@ router.get('/', async (req, res) => {
     }
 
     // Build sort
-    let sort = {};
+    let sort = { _id: -1 };
     if (sortOrder === 'lowToHigh') {
       sort = { discountPrice: 1, price: 1 };
     } else if (sortOrder === 'highToLow') {
@@ -153,10 +154,43 @@ router.get('/', async (req, res) => {
     const total = await Product.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
-    const products = await Product.find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit);
+   const products = await Product.aggregate([
+  {
+    $addFields: {
+      effectivePrice: {
+        $cond: {
+          if: { $ifNull: ['$discountPrice', false] },
+          then: '$discountPrice',
+          else: '$price'
+        }
+      }
+    }
+  },
+  {
+    $match: {
+      effectivePrice: { $gte: minPrice, $lte: maxPrice },
+      ...(categories.length > 0 && { category: { $in: categories } }),
+      ...(searchQuery && {
+        $or: [
+          { name: { $regex: searchQuery, $options: 'i' } },
+          { miniDescription: { $regex: searchQuery, $options: 'i' } },
+          { description: { $regex: searchQuery, $options: 'i' } },
+        ]
+      })
+    }
+  },
+  {
+    $sort:
+      sortOrder === 'lowToHigh'
+        ? { effectivePrice: 1 }
+        : sortOrder === 'highToLow'
+        ? { effectivePrice: -1 }
+        : { _id: -1 }
+  },
+  { $skip: skip },
+  { $limit: limit },
+]);
+
 
     res.json({
       success: true,

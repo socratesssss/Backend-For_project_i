@@ -62,5 +62,5 @@ const ProductSchema = new mongoose.Schema(
 // Prevent model overwrite error in dev (important for Next.js/Hot Reloading)
 const Product = mongoose.model('Product', ProductSchema);
  
-exports.Product = Product
+module.exports = Product
 
