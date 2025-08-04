@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const {PRODUCT_CATEGORIES} = require('../shared2Fronend/Shared')
 // Color Sub-Schema
 const ProductColorSchema = new mongoose.Schema({
   color: {
@@ -30,7 +30,7 @@ const ProductSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Vape', 'Juice', 'Pods'], // Make sure this matches your frontend
+      enum: PRODUCT_CATEGORIES, // Make sure this matches your frontend
       required: true,
     },
     images: {

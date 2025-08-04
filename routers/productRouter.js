@@ -4,8 +4,9 @@ const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const Product  = require('../models/productsModel');
-
+const verifyToken = require('../middlewere/verifyToken')
 const router = express.Router();
+const { getFilteredProducts } = require('./controllers/productCtr');
 
 // Set upload folder path
 const UPLOAD_DIR = path.join(__dirname, '../public/uploads');
@@ -52,9 +53,8 @@ const deleteFile = (urlPath) => {
     console.error('Failed to delete file:', err.message);
   }
 };
-
 // POST /api/product
-router.post('/', upload.fields(uploadFields), async (req, res) => {
+const createProduct = async (req, res) => {
   try {
     const {
       name,
@@ -107,12 +107,9 @@ router.post('/', upload.fields(uploadFields), async (req, res) => {
     console.error('Upload failed:', err);
     res.status(500).json({ message: 'Upload failed', error: err.message });
   }
-});
+}
 
-
-
-// In your products route file
-router.get('/', async (req, res) => {
+ const getProduct = async (req, res) => {
   try {
  
       const page = parseInt(req.query.page) || 1;
@@ -209,18 +206,14 @@ router.get('/', async (req, res) => {
       error: err.message 
     });
   }
-});
+}
 
 
 
 
 
-
-
-
-
-// GET by ID
-router.get('/:id', async (req, res) => {
+const getById =
+  async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -236,10 +229,9 @@ router.get('/:id', async (req, res) => {
     console.error('Error fetching product:', err);
     res.status(500).send('Error fetching product');
   }
-});
+}
 
-// PUT update product
-router.put('/:id', async (req, res) => {
+const updateProduct =    async (req, res) => {
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
@@ -252,32 +244,69 @@ router.put('/:id', async (req, res) => {
     console.error('Error updating product:', err);
     res.status(500).send('Error updating product');
   }
-});
+}
 
-// DELETE product and images
-router.delete('/:id', async (req, res) => {
+const deleteProduct =   async (req, res) => {
   const { id } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ 
+      success: false,
+      message: 'Invalid product ID format' 
+    });
+  }
+
   try {
+    // 1. Find the product to get image paths
     const product = await Product.findById(id);
-    if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (!product) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Product not found' 
+      });
+    }
 
-    // Delete gallery images
-    product.images.forEach(deleteFile);
-
-    // Delete color variant images
-    product.productColors.forEach((color) => {
-      color.images.forEach(deleteFile);
+    // 2. Delete associated images (optional - remove if not needed)
+    product.images.forEach(img => deleteFile(img));
+    product.productColors?.forEach(color => {
+      color.images?.forEach(img => deleteFile(img));
     });
 
-    // Delete from DB
+    // 3. Delete from database
     await Product.findByIdAndDelete(id);
 
-    res.json({ message: 'Product and all related images deleted successfully' });
+    res.json({ 
+      success: true,
+      message: 'Product deleted successfully'
+    });
+
   } catch (err) {
-    console.error('Error deleting product:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('Delete error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error during deletion'
+    });
   }
-});
+}
+// routes
+// POST /api/product
+router.post('/',verifyToken, upload.fields(uploadFields),createProduct);
+
+
+
+// get /api/product
+router.get('/',getProduct);
+router.get('/filter', getFilteredProducts);
+
+
+// GET by ID
+router.get('/:id', getById);
+
+// PUT update product
+router.put('/:id',verifyToken,updateProduct);
+
+
+// DELETE product and images
+router.delete('/:id',verifyToken, deleteProduct);
 
 module.exports = router;

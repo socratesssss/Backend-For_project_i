@@ -2,10 +2,10 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
+
 const router = express.Router();
 const UPLOAD_DIR = path.join(__dirname, '../public/uploads');
-
-router.post('/', (req, res) => {
+const delImg =    (req, res) => {
   const { imageUrl } = req.body;
 
   if (!imageUrl) {
@@ -29,6 +29,7 @@ router.post('/', (req, res) => {
     console.error('Failed to delete file:', err.message);
     return res.status(500).json({ message: 'Error deleting file' });
   }
-});
+}
+router.post('/',delImg);
 
 module.exports = router;
