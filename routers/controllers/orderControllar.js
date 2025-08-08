@@ -83,7 +83,7 @@ const dashboardCard =   async (req, res) => {
       totalDeliveredToday += order.total;
     }
 
-    const outOfStockProducts = await Product.find({ inStock: false }).select("name price");
+    const outOfStockProducts = await Product.find({ inStock: false }).select("name price  discountPrice");
     const outOfStockCount = outOfStockProducts.length;
 
     const stats = {

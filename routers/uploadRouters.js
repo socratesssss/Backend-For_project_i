@@ -2,6 +2,14 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middlewere/upload');
+const dotenv = require('dotenv')
+dotenv.config({path:'./config.env'})
+
+// port
+const port = process.env.PORT;
+
+
+
 
 router.post('/',
    upload.single('image'), (req, res) => {
@@ -10,7 +18,7 @@ router.post('/',
   }
 
   // Generate full URL
-  const fileUrl = `http://localhost:4000/uploads/${req.file.filename}`;
+  const fileUrl = `http://localhost:${port}/uploads/${req.file.filename}`;
 
   res.status(200).json({ url: fileUrl });
 });

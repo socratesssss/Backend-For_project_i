@@ -2,6 +2,12 @@ const Banner = require("../../models/BannersModel");
 const fs = require("fs/promises");
 const path = require("path");
 
+const dotenv = require('dotenv')
+dotenv.config({path:'./config.env'})
+
+// port
+const port = process.env.PORT;
+
 const MAX_BANNERS = 5;
 
 const getBanners = async (req, res) => {
@@ -23,16 +29,8 @@ const addBanner = async (req, res) => {
     if (currentCount >= 5) {
       return res.status(400).json({ error: "Max 5 banners allowed" });
     }
-// 4567890-
-// 4e56tyuiop
-// 45e67890-=
-// 4567890-
-// 4e56tyuiop
-// 45e67890-=
-// 4567890-
-// 4e56tyuiop
-// 45e67890-=
-    const imageUrl = `http://localhost:4000/uploads/${req.file.filename}`;
+
+    const imageUrl = `http://localhost:${port}/uploads/${req.file.filename}`;
     const newBanner = new Banner({ imageUrl });
     await newBanner.save();
     res.status(201).json(newBanner);

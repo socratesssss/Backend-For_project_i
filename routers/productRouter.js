@@ -288,7 +288,6 @@ const deleteProduct =   async (req, res) => {
     });
   }
 }
-// routes
 // POST /api/product
 router.post('/',verifyToken, upload.fields(uploadFields),createProduct);
 
