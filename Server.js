@@ -5,13 +5,14 @@ dotenv.config({path:'./config.env'})
 const app = require('./App');
 const port = process.env.PORT;
 
+const DB = process.env.MONGODB_SERVER.replace('<PASSWORD>',process.env.DB_PASSWORD)
 
 
 
 
 
 // console.log(process.env)
-mongoose.connect('mongodb://localhost:27017/ecommerce-data')
+mongoose.connect(DB)
   .then(() => {
     console.log("✅ Connected to MongoDB");
   

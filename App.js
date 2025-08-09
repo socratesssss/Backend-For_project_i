@@ -3,6 +3,8 @@ const app = express();
 const {PRODUCT_CATEGORIES} = require('./shared2Fronend/Shared')
 const cors = require('cors');
 const path = require('path');
+const compression = require('compression')
+
 // middlwere
 const verifyToken = require('./middlewere/verifyToken')
 
@@ -21,6 +23,7 @@ const visitorRoute = require('./routers/visitorRoute');
 
 // Middleware
 app.use(cors());
+app.use(compression())
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
