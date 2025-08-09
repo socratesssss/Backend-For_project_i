@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv')
 dotenv.config({path:'./.env'})
 const app = require('./App');
-const port = process.env.PORT;
+const port = process.env.PORT || '5000';
 
 const DB = process.env.MONGODB_SERVER.replace('<PASSWORD>',process.env.DB_PASSWORD)
 
@@ -23,5 +23,5 @@ mongoose.connect(DB)
 
 
     app.listen(port, () => {
-      console.log(`🚀 Server running on http://localhost:${port}`);
+      console.log(`🚀 Server running on${port}`);
     });

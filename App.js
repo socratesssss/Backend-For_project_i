@@ -25,6 +25,7 @@ const visitorRoute = require('./routers/visitorRoute');
 app.use(cors());
 app.use(compression())
 app.use(express.json());
+app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Routes
