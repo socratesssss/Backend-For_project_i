@@ -67,7 +67,7 @@ const createProduct = async (req, res) => {
       colorsData,
     } = req.body;
 
-    const baseUrl = req.headers.origin || `${req.protocol}://${req.get('host')}`;
+    const baseUrl = process.env.BACKEND_URL;
 
     const galleryImages = (req.files['galleryImages'] || []).map(
       (file) => `${baseUrl}/uploads/${file.filename}`
