@@ -6,7 +6,7 @@ const dotenv = require('dotenv')
 dotenv.config({path:'./config.env'})
 
 // port
-const url = BACKEND_URL || 'http://localhost:5000';
+const url = process.env.BACKEND_URL || 'http://localhost:5000';
 
 const MAX_BANNERS = 5;
 
