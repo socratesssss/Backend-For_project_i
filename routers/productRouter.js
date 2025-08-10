@@ -67,7 +67,7 @@ const createProduct = async (req, res) => {
       colorsData,
     } = req.body;
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = req.headers.origin || `${req.protocol}://${req.get('host')}`;
 
     const galleryImages = (req.files['galleryImages'] || []).map(
       (file) => `${baseUrl}/uploads/${file.filename}`
