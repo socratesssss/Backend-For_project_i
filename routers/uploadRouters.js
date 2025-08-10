@@ -6,7 +6,7 @@ const dotenv = require('dotenv')
 dotenv.config({path:'./config.env'})
 
 // port
-const port =  process.env.PORT || 5000;
+const port =  process.env.BACKEND_URL || 5000;
 
 
 
