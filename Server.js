@@ -6,7 +6,7 @@ const app = require('./App');
 
 
 const DB = process.env.MONGODB_SERVER.replace('<PASSWORD>',process.env.DB_PASSWORD)
-const PORT = process.env.PORT || 4000
+const PORT = process.env.PORT || 5000
 
 
 
@@ -23,6 +23,6 @@ mongoose.connect(DB)
   });
 
 
-    app.listen( PORT, () => {
-      console.log(`🚀 Server running on:.. ${ process.env.PORT}`);
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on:.. http://localhost:${PORT}`);
     });

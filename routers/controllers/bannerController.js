@@ -6,7 +6,7 @@ const dotenv = require('dotenv')
 dotenv.config({path:'./config.env'})
 
 // port
-const port =   process.env.PORT;
+const port = process.env.PORT || 5000;
 
 const MAX_BANNERS = 5;
 
