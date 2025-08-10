@@ -6,7 +6,7 @@ const dotenv = require('dotenv')
 dotenv.config({path:'./config.env'})
 
 // port
-// const port =  process.env.BACKEND_URL || 5000;
+const url =  process.env.BACKEND_URL ;
 
 
 
@@ -18,7 +18,7 @@ router.post('/',
   }
 
   // Generate full URL
-  const fileUrl = `/uploads/${req.file.filename}`;
+  const fileUrl = `${url}/uploads/${req.file.filename}`;
 
   res.status(200).json({ url: fileUrl });
 });
