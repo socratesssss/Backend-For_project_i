@@ -6,7 +6,7 @@ const dotenv = require('dotenv')
 dotenv.config({path:'./config.env'})
 
 // port
-const port = process.env.PORT;
+const port =  process.env.BACKEND_URL || process.env.PORT;
 
 const MAX_BANNERS = 5;
 
@@ -30,7 +30,7 @@ const addBanner = async (req, res) => {
       return res.status(400).json({ error: "Max 5 banners allowed" });
     }
 
-    const imageUrl = `http://localhost:${port}/uploads/${req.file.filename}`;
+    const imageUrl = `${port}/uploads/${req.file.filename}`;
     const newBanner = new Banner({ imageUrl });
     await newBanner.save();
     res.status(201).json(newBanner);
