@@ -6,17 +6,17 @@ const visitorRoute = require('../middlewere/verifyToken.js');
 
 // routes/visitorRoute.js
 router.post('/track', async (req, res) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+ const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
+
   const userAgent = req.headers['user-agent'];
 
   try {
     const existing = await Visitor.findOne({ ip });
 
-    if (existing) {
-      // It's a returning visitor
-      await Visitor.create({ ip, userAgent }); // Optional: you can still log the visit
-      return res.status(200).json({ message: 'Returning visitor' });
-    }
+ if (existing) {
+  return res.status(200).json({ message: 'Returning visitor' });
+}
+
 
     // New visitor
     await Visitor.create({ ip, userAgent });

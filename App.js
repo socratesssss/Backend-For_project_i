@@ -27,6 +27,8 @@ app.use(compression())
 app.use(express.json());
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.set('trust proxy', true);
+
 
 
 // Routes
