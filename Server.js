@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 5000
 
 
 // console.log(process.env)
-mongoose.connect(DB)
+mongoose.connect('mongodb://127.0.0.1:27017/test-e-com')
   .then(() => {
     console.log("✅ Connected to MongoDB");
   

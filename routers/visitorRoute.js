@@ -5,26 +5,36 @@ const Visitor = require('../models/Visitor.js');
 const visitorRoute = require('../middlewere/verifyToken.js');
 
 // routes/visitorRoute.js
-router.post('/track', async (req, res) => {
- const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
-
-  const userAgent = req.headers['user-agent'];
-
-  try {
-    const existing = await Visitor.findOne({ ip });
-
- if (existing) {
-  return res.status(200).json({ message: 'Returning visitor' });
+function getClientIp(req) {
+  return (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '')
+    .split(',')[0]
+    .trim();
 }
 
+router.post('/track', async (req, res) => {
+  const visitorId = req.body?.visitorId || null;
+  const ip = getClientIp(req);
+  const userAgent = req.headers['user-agent'] || '';
 
-    // New visitor
-    await Visitor.create({ ip, userAgent });
-    res.status(200).json({ message: 'New visitor' });
+  try {
+    // Check if this visitorId or IP already exists (to decide new vs returning)
+    let isReturning = false;
+    if (visitorId) {
+      const prev = await Visitor.findOne({ visitorId }).lean();
+      isReturning = !!prev;
+    } else {
+      // fallback to IP-based check
+      const prev = await Visitor.findOne({ ip }).lean();
+      isReturning = !!prev;
+    }
 
+    // Log this visit (every visit is a document)
+    await Visitor.create({ visitorId, ip, userAgent });
+
+    return res.status(200).json({ message: isReturning ? 'Returning visitor' : 'New visitor' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to track visit' });
+    console.error('Failed to track visit:', err);
+    return res.status(500).json({ error: 'Failed to track visit' });
   }
 });
 
@@ -57,6 +67,14 @@ router.get('/count',visitorRoute, async (req, res) => {
 router.get('/stats',visitorRoute, async (req, res) => {
   try {
     const now = new Date();
+    // example for all-time
+const totalVisits = await Visitor.countDocuments();
+const uniqueVisitorIds = await Visitor.distinct('visitorId', { visitorId: { $ne: null } });
+const uniqueByVisitorId = uniqueVisitorIds.length;
+
+// optionally merge with distinct IPs for entries without visitorId
+const visitorsWithoutIdCount = await Visitor.distinct('ip', { visitorId: null });
+const uniqueTotal = uniqueByVisitorId + visitorsWithoutIdCount.length;
 
     // Start of today
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
