@@ -8,36 +8,57 @@ const UAParser = require('ua-parser-js');
 // Enhanced visitor tracking
 router.post('/track', async (req, res) => {
   try {
-    const { fingerprint } = req.body;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const userAgent = req.headers['user-agent'];
-
+    const { fingerprint, url, referrer } = req.body;
+    
+    // Validate required fields
     if (!fingerprint) {
-      return res.status(400).json({ error: 'Fingerprint is required' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Fingerprint is required' 
+      });
     }
 
-    // Check for existing visitor
-    const existingVisitor = await Visitor.findOneAndUpdate(
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || 
+               req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+
+    // Update or create visitor record
+    const visitor = await Visitor.findOneAndUpdate(
       { fingerprint },
       {
-        $set: { lastVisit: new Date() },
-        $setOnInsert: {
+        $set: { 
+          lastVisit: new Date(),
+          lastUrl: url,
+          lastReferrer: referrer,
           ip,
-          userAgent,
-          firstVisit: new Date()
+          userAgent
+        },
+        $setOnInsert: {
+          firstVisit: new Date(),
+          visitCount: 0
         },
         $inc: { visitCount: 1 }
       },
-      { upsert: true, new: true }
+      { 
+        upsert: true, 
+        new: true,
+        lean: true 
+      }
     );
 
     res.status(200).json({
-      message: 'Visit tracked',
-      isNewVisitor: existingVisitor.visitCount === 1
+      success: true,
+      isNewVisitor: visitor.visitCount === 1,
+      visitorId: visitor._id
     });
+
   } catch (err) {
     console.error('Tracking error:', err);
-    res.status(500).json({ error: 'Failed to track visit' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
