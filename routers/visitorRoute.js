@@ -8,72 +8,35 @@ const UAParser = require('ua-parser-js');
 // Enhanced visitor tracking
 router.post('/track', async (req, res) => {
   try {
+    const { fingerprint } = req.body;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const userAgent = req.headers['user-agent'];
-    const fingerprint = req.body.fingerprint || uuidv4();
 
-    // Parse user agent
-    const parser = new UAParser(userAgent);
-    const ua = parser.getResult();
-
-    // Visitor data
-    const visitorData = {
-      fingerprint,
-      ip,
-      userAgent,
-      deviceType: getDeviceType(ua),
-      browser: ua.browser.name,
-      os: ua.os.name,
-      // Add geo data if you have it (from another middleware)
-      ...(req.geo && { 
-        country: req.geo.country,
-        city: req.geo.city
-      })
-    };
-
-    // Check for existing visitor
-    const existing = await Visitor.findOneAndUpdate(
-      { fingerprint },
-      { 
-        $set: { 
-          lastVisit: new Date(),
-          ...visitorData // Update any changed info
-        },
-        $inc: { visitCount: 1 },
-        $push: { visitHistory: { 
-          date: new Date(),
-          ip,
-          userAgent
-        }}
-      },
-      { new: true }
-    );
-
-    if (existing) {
-      return res.status(200).json({ 
-        message: 'Returning visitor',
-        fingerprint: existing.fingerprint,
-        isNew: false
-      });
+    if (!fingerprint) {
+      return res.status(400).json({ error: 'Fingerprint is required' });
     }
 
-    // New visitor
-    const newVisitor = await Visitor.create({
-      ...visitorData,
-      firstVisit: new Date(),
-      lastVisit: new Date(),
-      visitCount: 1,
-      visitHistory: [{ date: new Date(), ip, userAgent }]
-    });
+    // Check for existing visitor
+    const existingVisitor = await Visitor.findOneAndUpdate(
+      { fingerprint },
+      {
+        $set: { lastVisit: new Date() },
+        $setOnInsert: {
+          ip,
+          userAgent,
+          firstVisit: new Date()
+        },
+        $inc: { visitCount: 1 }
+      },
+      { upsert: true, new: true }
+    );
 
-    res.status(200).json({ 
-      message: 'New visitor',
-      fingerprint: newVisitor.fingerprint,
-      isNew: true
+    res.status(200).json({
+      message: 'Visit tracked',
+      isNewVisitor: existingVisitor.visitCount === 1
     });
-
   } catch (err) {
-    console.error('Visitor tracking error:', err);
+    console.error('Tracking error:', err);
     res.status(500).json({ error: 'Failed to track visit' });
   }
 });
