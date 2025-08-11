@@ -27,13 +27,7 @@ app.use(compression())
 app.use(express.json());
 app.use(express.static('public'));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-app.use(cors({
-  origin: [
-    'https://my-ecom-sitei.netlify.app',
-    'http://localhost:3000', // For dev
-    'https://dashboard-for-e-com.netlify.app'
-  ]
-}));
+
 
 // Routes
 app.use('/api/product', ProductRouter);
